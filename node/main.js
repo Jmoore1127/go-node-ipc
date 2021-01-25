@@ -1,9 +1,11 @@
-
+// Spin up go process
 const { spawn } = require('child_process');
+
 const networkAuditTester = spawn('./testbin', {
     cwd: "/Users/jared/Projects/pocs/network-audit/go"
 })
 
+//capture output
 networkAuditTester.stdout.on('data', (data) => {
     console.log(`stdout: ${data}`);
 });
@@ -19,12 +21,17 @@ networkAuditTester.on('close', (code) => {
 networkAuditTester.on('error', (err) => {
     console.error(err)
     console.error('Failed to start subprocess.');
+    process.exit(1)
 });
 
+//cleanup
+process.on('exit', function () {
+    networkAuditTester.kill();
+});
 
+// IPC communication (TCP Socket)
 var ipc = require('node-ipc');
 const { exit } = require('process');
-const { pathToFileURL } = require('url');
 ipc.config.networkPort = 54321;
 ipc.connectToNet("test", () => {
     ipc.of.test.on("connect", () => {
@@ -44,6 +51,3 @@ ipc.connectToNet("test", () => {
     });
 })
 
-process.on('exit', function () {
-    networkAuditTester.kill();
-});
